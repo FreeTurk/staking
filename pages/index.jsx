@@ -216,7 +216,7 @@ export default function Home() {
             </div>
             <div className="items-center justify-around drop-shadow-xl bg-blue-700 w-full lg:w-1/3 lg:max-w-sm lg:h-full h-96 flex flex-col p-8 rounded-xl">
                 <div className='text-xl text-center'>
-                    To start staking, enter an amount and press "Stake!"
+                    To start staking, enter an amount and press &quot;Stake!&quot;
                 </div>
                 <div>
                     <input onChange={event => setStakes(event.target.value)} className='bg-blue-900 rounded-md p-4' type="number" />
@@ -272,7 +272,7 @@ export default function Home() {
                     await transaction.wait();
                     const q = query(dbInstance, where("address", "==", account))
                     await deleteDoc(q);
-                }}>Take the cash</button> : <div>Your coins aren't ready yet!</div>}
+                }}>Take the cash</button> : <div>Your coins aren&apos;t ready yet!</div>}
                 </div>
             </div>
         </div>
