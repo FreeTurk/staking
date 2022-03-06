@@ -7,12 +7,13 @@ import { useMoralis, useWeb3Transfer, enableWeb3, isWeb3Enabled, web3 } from "re
 import  { Moralis } from "moralis";
 import React, { useState } from 'react';
 import { initializeApp, firebase } from "firebase/app";
-import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, where } from "firebase/firestore"
+import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, where, deleteDoc } from "firebase/firestore"
 
 
 
 export default function Home() {
-
+    const [userStake, setUserStake] = useState(0)
+    const [stakedAmount, setStakes] = useState(0)
     const [isReady, setIsReady] = useState(false)
     const [usrAdd, setUsrAdd] = useState()
     const [isValVisible, setValVisible] = useState(false)
@@ -33,11 +34,10 @@ export default function Home() {
 
     const dbInstance = collection(database, 'stakers');
 
-    var stakeAmount = BigInt(10 * 10 ** 18)
     const saveStake = () => {
         addDoc(dbInstance, {
             address: account,
-            amount: JSON.parse(stakeAmount),
+            amount: JSON.parse(stakedAmount * 10 ** 18),
             createdAt: serverTimestamp()
         })
     }
@@ -64,7 +64,7 @@ export default function Home() {
                 },
                 {
                     "internalType": "uint256",
-                    "name": "stakeamount",
+                    "name": "stakedAmount",
                     "type": "uint256"
                 }
             ],
@@ -84,7 +84,7 @@ export default function Home() {
                 },
                 {
                     "internalType": "uint256",
-                    "name": "stakeamount",
+                    "name": "stakedAmount",
                     "type": "uint256"
                 }
             ],
@@ -104,7 +104,7 @@ export default function Home() {
         abi: ABI,
         params: {
           staker: account,
-          stakeamount: stakeAmount,
+          stakedAmount: BigInt(stakedAmount * 10 ** 18),
         },
       };
 
@@ -114,7 +114,7 @@ export default function Home() {
         abi: ABI,
         params: {
           staker: account,
-          stakeamount: stakePay,
+          stakedAmount: userStake,
         },
       }; 
     
@@ -219,14 +219,19 @@ export default function Home() {
                     To start staking, enter an amount and press "Stake!"
                 </div>
                 <div>
-                    <input className='bg-blue-900 rounded-md p-4' type="number" />
+                    <input onChange={event => setStakes(event.target.value)} className='bg-blue-900 rounded-md p-4' type="number" />
                 </div>
                 <div>
-                    {account ? <button className='drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[240px] hover:scale-110 bg-blue-900' onClick={async() => {
-                        saveStake();
-                        const transaction = await Moralis.executeFunction(sendOptions);
-                        console.log(transaction.hash)
-                        await transaction.wait();
+                    {account ? <button className='drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[240px] hover:scale-110 bg-blue-900' onClick={
+                    async() => {
+                        if (BigInt(stakedAmount)) {
+                                const transaction = await Moralis.executeFunction(sendOptions);
+                                console.log(transaction.hash)
+                                await transaction.wait();
+                                saveStake();
+                        } else if (!BigInt(stakedAmount)) {
+                            alert("Please enter a value")
+                        }
                     }}>Stake!</button> : <div>Please connect first...</div>}
                 </div>
             </div>
@@ -235,7 +240,7 @@ export default function Home() {
                     Here, you can check your staked coins.
                 </div>
                 <div>
-                    { isValVisible ? <div className='text-center'>You have {usrAdd} coins staked. <br /> <br /> That makes about {(usrAdd / 100) * 111} after staking!</div> : <div>Seems like you haven't staked yet...</div>}
+                    { isValVisible ? <div className='text-center'>You have {usrAdd / 10 ** 18} coins staked. <br /> <br /> That makes about {Math.round(((usrAdd / 100) * 111) / 10 ** 18)} after staking!</div> : <div>Seems like you haven't staked yet...</div>}
                 </div>
                 <div className='flex gap-4 flex-col'>
                     {account ? <button className='drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[240px] hover:scale-110 bg-blue-900' onClick={async() => {
@@ -244,14 +249,16 @@ export default function Home() {
                     querySnapshot.forEach((doc) => {
                     // doc.data() is never undefined for query doc snapshots
                     const obj = (doc.id, "=>", doc.data());
+                    console.log(doc.id, "=>", doc.data())
                     console.log(obj.amount);
                     console.log(obj.createdAt.seconds)
                     console.log(Math.round((new Date()).getTime() / 1000))
 
                     setValVisible(true)
                     setUsrAdd(obj.amount)
+                    setUserStake(obj.amount)
                     
-                    if (Math.round((new Date()).getTime() / 1000) - obj.createdAt.seconds > 604800) {
+                    if (Math.round((new Date()).getTime() / 1000) - obj.createdAt.seconds < 604800) {
                         setIsReady(false)
                     } else {
                         setIsReady(true)
@@ -263,6 +270,8 @@ export default function Home() {
                     const transaction = await Moralis.executeFunction(payOptions);
                     console.log(transaction.hash)
                     await transaction.wait();
+                    const q = query(dbInstance, where("address", "==", account))
+                    await deleteDoc(q);
                 }}>Take the cash</button> : <div>Your coins aren't ready yet!</div>}
                 </div>
             </div>
