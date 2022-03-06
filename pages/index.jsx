@@ -7,14 +7,17 @@ import { useMoralis, useWeb3Transfer, enableWeb3, isWeb3Enabled, web3 } from "re
 import  { Moralis } from "moralis";
 import React, { useState } from 'react';
 import { initializeApp, firebase } from "firebase/app";
-import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore"
+import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, where } from "firebase/firestore"
 
 
 
 export default function Home() {
+
+    const [isReady, setIsReady] = useState(false)
+    const [usrAdd, setUsrAdd] = useState()
+    const [isValVisible, setValVisible] = useState(false)
     const { authenticate, account } = useMoralis();
     console.log(serverTimestamp())
-    var stakeAmount = 10
     const firebaseConfig = {
         apiKey: "AIzaSyAZgon2VEA4J2GN_fP8x1NRYVU6ZiUkXV0",
         authDomain: "staking-dee0b.firebaseapp.com",
@@ -29,15 +32,16 @@ export default function Home() {
     const database = getFirestore(app)
 
     const dbInstance = collection(database, 'stakers');
+
+    var stakeAmount = BigInt(10 * 10 ** 18)
     const saveStake = () => {
         addDoc(dbInstance, {
             address: account,
-            amount: stakeAmount,
+            amount: JSON.parse(stakeAmount),
             createdAt: serverTimestamp()
         })
     }
 
-    const [isMenu, setIsMenu] = useState(false);
 
     const particlesInit = (main) => {
         console.log(main);
@@ -48,11 +52,6 @@ export default function Home() {
       const particlesLoaded = (container) => {
         console.log(container);
       };
-      const { fetch, error, isFetching } = useWeb3Transfer({
-        amount: Moralis.Units.ETH(0.001),
-        receiver: "0xB6A70F2d7e7D16e739eCa7c263b1eF9F45C4c3Bb",
-        type: "native",
-      });
       
       const ABI = [
         {
@@ -96,6 +95,8 @@ export default function Home() {
             "type": "function"
         },
     ];
+
+    var stakePay = BigInt(10 * 10 ** 18)
     
     const sendOptions = {
         contractAddress: "0x3E353245Cc50F27C781F4f15c46f022fb861ba5C",
@@ -109,27 +110,13 @@ export default function Home() {
 
       const payOptions = {
         contractAddress: "0x3E353245Cc50F27C781F4f15c46f022fb861ba5C",
-        functionName: "stakeStart",
+        functionName: "payStake",
         abi: ABI,
         params: {
           staker: account,
           stakeamount: stakePay,
         },
-      };  
-    
-    async function stakeSend() {
-        saveStake();
-        const transaction = await Moralis.executeFunction(sendOptions);
-        console.log(transaction.hash)
-        await transaction.wait();
-    }
-
-    async function payStake() {
-        saveStake();
-        const transaction = await Moralis.executeFunction(sendOptions);
-        console.log(transaction.hash)
-        await transaction.wait();
-    }
+      }; 
     
   return (
     <div className="h-full w-full flex justify-center lg:items-center">
@@ -217,39 +204,66 @@ export default function Home() {
     />
         <div className="py-16 lg:p-0 text-white flex absolute gap-16 flex-col lg:flex-row w-3/4 lg:h-2/4 justify-center items-center transition-all">
             <div className="items-center justify-around drop-shadow-xl bg-blue-700 w-full lg:w-1/3 lg:max-w-sm lg:h-full h-96 flex flex-col p-8 rounded-xl">
-                <div className="text-4xl">
+                <div className="text-4xl font-bold">
                     Start Staking!
                 </div>
-                <div>
-                    fucking
+                <div className='text-xl'>
+                    Welcome to Trueholds staking!
                 </div>
                 <div id="logging">
                 {account ? <button className="drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[200px] hover:scale-110 bg-blue-900">{account}</button> : <button onClick={authenticate} className="drop-shadow-md p-4 rounded-md transition-all hover:scale-110 bg-blue-900">Connect</button>}
                 </div>
             </div>
             <div className="items-center justify-around drop-shadow-xl bg-blue-700 w-full lg:w-1/3 lg:max-w-sm lg:h-full h-96 flex flex-col p-8 rounded-xl">
-                <div>
-                    hello
+                <div className='text-xl text-center'>
+                    To start staking, enter an amount and press "Stake!"
                 </div>
                 <div>
                     <input className='bg-blue-900 rounded-md p-4' type="number" />
                 </div>
                 <div>
-                    {account ? <button className='drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[240px] hover:scale-110 bg-blue-900' onClick={stakeSend()}>Stake!</button> : <div>Please connect first...</div>}
+                    {account ? <button className='drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[240px] hover:scale-110 bg-blue-900' onClick={async() => {
+                        saveStake();
+                        const transaction = await Moralis.executeFunction(sendOptions);
+                        console.log(transaction.hash)
+                        await transaction.wait();
+                    }}>Stake!</button> : <div>Please connect first...</div>}
                 </div>
             </div>
             <div className="items-center justify-around drop-shadow-xl bg-blue-700 w-full lg:w-1/3 lg:max-w-sm lg:h-full h-96 flex flex-col p-8 rounded-xl">
-                <div>
-                {error && <div>error</div>}
-      <button onClick={() => fetch()} disabled={isFetching}>
-        Transfer
-      </button>
+                <div className='text-xl text-center'>
+                    Here, you can check your staked coins.
                 </div>
                 <div>
-                    fucking
+                    { isValVisible ? <div className='text-center'>You have {usrAdd} coins staked. <br /> <br /> That makes about {(usrAdd / 100) * 111} after staking!</div> : <div>Seems like you haven't staked yet...</div>}
                 </div>
-                <div>
-                    world
+                <div className='flex gap-4 flex-col'>
+                    {account ? <button className='drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[240px] hover:scale-110 bg-blue-900' onClick={async() => {
+                    const q = query(dbInstance, where("address", "==", account))
+                    const querySnapshot = await getDocs(q);
+                    querySnapshot.forEach((doc) => {
+                    // doc.data() is never undefined for query doc snapshots
+                    const obj = (doc.id, "=>", doc.data());
+                    console.log(obj.amount);
+                    console.log(obj.createdAt.seconds)
+                    console.log(Math.round((new Date()).getTime() / 1000))
+
+                    setValVisible(true)
+                    setUsrAdd(obj.amount)
+                    
+                    if (Math.round((new Date()).getTime() / 1000) - obj.createdAt.seconds > 604800) {
+                        setIsReady(false)
+                    } else {
+                        setIsReady(true)
+                    }
+
+                    });
+                }}>Check</button> : <div>Please connect first!..</div>}
+                {account && isReady ? <button className='drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[240px] hover:scale-110 bg-blue-900' onClick={async() => {
+                    const transaction = await Moralis.executeFunction(payOptions);
+                    console.log(transaction.hash)
+                    await transaction.wait();
+                }}>Take the cash</button> : <div>Your coins aren't ready yet!</div>}
                 </div>
             </div>
         </div>
