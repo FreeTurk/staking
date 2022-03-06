@@ -12,10 +12,9 @@ import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, wher
 
 
 export default function Home() {
-    const [userStake, setUserStake] = useState(0)
     const [stakedAmount, setStakes] = useState(0)
     const [isReady, setIsReady] = useState(false)
-    const [usrAdd, setUsrAdd] = useState()
+    const [usrAdd, setUsrAdd] = useState(0)
     const [isValVisible, setValVisible] = useState(false)
     const { authenticate, account } = useMoralis();
     console.log(serverTimestamp())
@@ -114,7 +113,7 @@ export default function Home() {
         abi: ABI,
         params: {
           staker: account,
-          stakedAmount: userStake,
+          stakedAmount: BigInt(Math.round((usrAdd / 111) * 100)),
         },
       }; 
     
@@ -224,6 +223,13 @@ export default function Home() {
                 <div>
                     {account ? <button className='drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[240px] hover:scale-110 bg-blue-900' onClick={
                     async() => {
+
+                        const q = query(dbInstance, where("address", "==", account))
+                        const querySnapshot = await getDocs(q);
+
+                        console.log(querySnapshot.docs.length)
+
+                        if (querySnapshot.docs.length == 0) {
                         if (BigInt(stakedAmount)) {
                                 const transaction = await Moralis.executeFunction(sendOptions);
                                 console.log(transaction.hash)
@@ -232,6 +238,9 @@ export default function Home() {
                         } else if (!BigInt(stakedAmount)) {
                             alert("Please enter a value")
                         }
+                    } else {
+                        alert("You have staked before")
+                    }
                     }}>Stake!</button> : <div>Please connect first...</div>}
                 </div>
             </div>
@@ -256,7 +265,6 @@ export default function Home() {
 
                     setValVisible(true)
                     setUsrAdd(obj.amount)
-                    setUserStake(obj.amount)
                     
                     if (Math.round((new Date()).getTime() / 1000) - obj.createdAt.seconds < 604800) {
                         setIsReady(false)
@@ -267,11 +275,14 @@ export default function Home() {
                     });
                 }}>Check</button> : <div>Please connect first!..</div>}
                 {account && isReady ? <button className='drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[240px] hover:scale-110 bg-blue-900' onClick={async() => {
+                    const q = query(dbInstance, where("address", "==", account))
+                    const querySnapshot = await getDocs(q);
                     const transaction = await Moralis.executeFunction(payOptions);
                     console.log(transaction.hash)
                     await transaction.wait();
-                    const q = query(dbInstance, where("address", "==", account))
-                    await deleteDoc(q);
+                    querySnapshot.forEach((doc) => {
+                    deleteDoc(doc.ref);
+                    })
                 }}>Take the cash</button> : <div>Your coins aren&apos;t ready yet!</div>}
                 </div>
             </div>
