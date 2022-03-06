@@ -240,7 +240,7 @@ export default function Home() {
                     Here, you can check your staked coins.
                 </div>
                 <div>
-                    { isValVisible ? <div className='text-center'>You have {usrAdd / 10 ** 18} coins staked. <br /> <br /> That makes about {Math.round(((usrAdd / 100) * 111) / 10 ** 18)} after staking!</div> : <div>Seems like you haven't staked yet...</div>}
+                    { isValVisible ? <div className='text-center'>You have {usrAdd / 10 ** 18} coins staked. <br /> <br /> That makes about {Math.round(((usrAdd / 100) * 111) / 10 ** 18)} after staking!</div> : <div>Seems like you haven&apos;t staked yet...</div>}
                 </div>
                 <div className='flex gap-4 flex-col'>
                     {account ? <button className='drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[240px] hover:scale-110 bg-blue-900' onClick={async() => {
