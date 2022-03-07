@@ -7,6 +7,7 @@ import { useMoralis, useWeb3Transfer, enableWeb3, isWeb3Enabled, web3 } from "re
 import  { Moralis } from "moralis";
 import React, { useState } from 'react';
 import { initializeApp, firebase } from "firebase/app";
+import WalletConnectProvider from '@walletconnect/web3-provider';
 import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, where, deleteDoc } from "firebase/firestore"
 
 
@@ -244,7 +245,9 @@ export default function Home() {
                 <div id="logging">
                 {account ? <button className="drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[200px] hover:scale-110 bg-blue-900">{account}</button> : <button onClick={async function log() {
                   console.log(bal)
-                  await Moralis.authenticate()
+                  await Moralis.authenticate({ 
+                    provider: "walletconnect"
+                })
                   await setBal(await Moralis.executeFunction(getBalance))}} className="drop-shadow-md p-4 rounded-md transition-all hover:scale-110 bg-blue-900">Connect</button>}
                 </div>
             </div>
