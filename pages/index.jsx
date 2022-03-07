@@ -12,6 +12,7 @@ import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, wher
 
 
 export default function Home() {
+    const [bal, setBal] = useState('')
     const [stakedAmount, setStakes] = useState(0)
     const [isReady, setIsReady] = useState(false)
     const [usrAdd, setUsrAdd] = useState(0)
@@ -93,6 +94,27 @@ export default function Home() {
             "stateMutability": "nonpayable",
             "type": "function"
         },
+        {
+          "constant": true,
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "name": "balanceOf",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "type": "function"
+        },
     ];
 
     var stakePay = BigInt(10 * 10 ** 18)
@@ -115,7 +137,16 @@ export default function Home() {
           staker: account,
           stakedAmount: BigInt(Math.round((usrAdd / 111) * 100)),
         },
-      }; 
+      };
+
+      const getBalance = {
+        contractAddress: "0xc658639FEAa313C4b6BD69C5Bf9300835E766535",
+        functionName: "balanceOf",
+        abi: ABI,
+        params: {
+          account: account,
+        },
+      }
     
   return (
     <div className="h-full w-full flex justify-center lg:items-center">
@@ -206,11 +237,15 @@ export default function Home() {
                 <div className="text-4xl font-bold">
                     Start Staking!
                 </div>
-                <div className='text-xl'>
-                    Welcome to Trueholds staking!
+                <div className='text-xl text-center'>
+                    Welcome to Trueholds staking! <br />
+                    200% APY, 7 Day Lock
                 </div>
                 <div id="logging">
-                {account ? <button className="drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[200px] hover:scale-110 bg-blue-900">{account}</button> : <button onClick={authenticate} className="drop-shadow-md p-4 rounded-md transition-all hover:scale-110 bg-blue-900">Connect</button>}
+                {account ? <button className="drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[200px] hover:scale-110 bg-blue-900">{account}</button> : <button onClick={async function log() {
+                  console.log(bal)
+                  await Moralis.authenticate()
+                  await setBal(await Moralis.executeFunction(getBalance))}} className="drop-shadow-md p-4 rounded-md transition-all hover:scale-110 bg-blue-900">Connect</button>}
                 </div>
             </div>
             <div className="items-center justify-around drop-shadow-xl bg-blue-700 w-full lg:w-1/3 lg:max-w-sm lg:h-full h-96 flex flex-col p-8 rounded-xl">
@@ -218,6 +253,7 @@ export default function Home() {
                     To start staking, enter an amount and press &quot;Stake!&quot;
                 </div>
                 <div>
+                  <div>{bal}</div>
                     <input onChange={event => setStakes(event.target.value)} className='bg-blue-900 rounded-md p-4' type="number" />
                 </div>
                 <div>
