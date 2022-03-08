@@ -96,27 +96,6 @@ export default function Home() {
             "stateMutability": "nonpayable",
             "type": "function"
         },
-        {
-          "constant": true,
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "account",
-              "type": "address"
-            }
-          ],
-          "name": "balanceOf",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "view",
-          "type": "function"
-        },
     ];
 
     var stakePay = BigInt(10 * 10 ** 18)
@@ -140,15 +119,6 @@ export default function Home() {
           stakedAmount: BigInt(Math.round((usrAdd / 111) * 100)),
         },
       };
-
-      const getBalance = {
-        contractAddress: "0xc658639FEAa313C4b6BD69C5Bf9300835E766535",
-        functionName: "balanceOf",
-        abi: ABI,
-        params: {
-          account: account,
-        },
-      }
     
   return (
     <div className="h-full w-full flex justify-center lg:items-center">
@@ -252,8 +222,6 @@ export default function Home() {
                 })
               } else {
                 await Moralis.authenticate()
-                setBal(Moralis.executeFunction(getBalance))
-                
               }
                   }} className="drop-shadow-md p-4 rounded-md transition-all hover:scale-110 bg-blue-900">Connect</button>}
                 </div>
