@@ -5,21 +5,25 @@ import Script from 'next/script'
 import Particles from "react-tsparticles";
 import { useMoralis, useWeb3Transfer, enableWeb3, isWeb3Enabled, web3 } from "react-moralis";
 import  { Moralis } from "moralis";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { initializeApp, firebase } from "firebase/app";
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, where, deleteDoc } from "firebase/firestore"
 import {isMobile} from 'react-device-detect';
+import { Line, Circle } from 'rc-progress';
+import percentValue from 'percent-value';
 
 
 
 export default function Home() {
+    const [timeLeft, setTimeLeft] = useState(0)
     const [bal, setBal] = useState()
     const [stakedAmount, setStakes] = useState(0)
     const [isReady, setIsReady] = useState(false)
     const [usrAdd, setUsrAdd] = useState(0)
     const [isValVisible, setValVisible] = useState(false)
     const { authenticate, account } = useMoralis();
+
     console.log(serverTimestamp())
     const firebaseConfig = {
         apiKey: "AIzaSyAZgon2VEA4J2GN_fP8x1NRYVU6ZiUkXV0",
@@ -110,16 +114,41 @@ export default function Home() {
         },
       };
 
-      const payOptions = {
-        contractAddress: "0xc658639FEAa313C4b6BD69C5Bf9300835E766535",
-        functionName: "payStake",
-        abi: ABI,
-        params: {
-          staker: account,
-          stakedAmount: BigInt(Math.round((usrAdd / 111) * 100)),
-        },
-      };
-    
+    const payOptions = {
+      contractAddress: "0xc658639FEAa313C4b6BD69C5Bf9300835E766535",
+      functionName: "payStake",
+      abi: ABI,
+      params: {
+        staker: account,
+        stakedAmount: BigInt(Math.round((usrAdd / 111) * 100)),
+      },
+    };
+
+    const getBalance = {
+      contractAddress: "0xc658639FEAa313C4b6BD69C5Bf9300835E766535",
+      functionName: "balanceOf",
+      abi: ABI,
+      params: {
+        account: account,
+      },
+    }
+
+
+    async function timeleft() {
+      const q = query(dbInstance, where("address", "==", account))
+      const querySnapshot = await getDocs(q);
+
+    querySnapshot.forEach((doc) => {
+      const obj = (doc.id, "=>", doc.data());
+      console.log(obj.createdAt.seconds)
+      console.log(Math.round(Math.round(Date.now() / 1000 - obj.createdAt.seconds) / 604800 * 100))
+      setTimeLeft(Math.round(Math.round(Date.now() / 1000 - obj.createdAt.seconds) / 604800 * 100))
+      })
+    }
+
+    timeleft()
+
+
   return (
     <div className="h-full w-full flex justify-center lg:items-center">
          <Particles
@@ -265,8 +294,8 @@ export default function Home() {
                 <div>
                     { isValVisible ? <div className='text-center'>You have {usrAdd / 10 ** 18} coins staked. <br /> <br /> That makes about {Math.round(((usrAdd / 100) * 111) / 10 ** 18)} after staking!</div> : <div>Seems like you haven&apos;t staked yet...</div>}
                 </div>
-                <div className='flex gap-4 flex-col'>
-                    {account ? <button className='drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[240px] hover:scale-110 bg-blue-900' onClick={async() => {
+                <div className='flex gap-4 w-full items-center flex-col'>
+                    {account ? <button className='drop-shadow-md text-center p-4 rounded-md transition-all overflow-hidden text-ellipsis w-[200px] hover:scale-110 bg-blue-900' onClick={async() => {
                     const q = query(dbInstance, where("address", "==", account))
                     const querySnapshot = await getDocs(q);
                     querySnapshot.forEach((doc) => {
@@ -286,9 +315,12 @@ export default function Home() {
                         setIsReady(true)
                     }
 
+                    console.log(obj.createdAt.seconds)
+                    console.log(Math.round(Date.now() / 1000))
+
                     });
                 }}>Check</button> : <div>Please connect first!..</div>}
-                {account && isReady ? <button className='drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[240px] hover:scale-110 bg-blue-900' onClick={async() => {
+                {account ? isReady ? <button className='drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[240px] hover:scale-110 bg-blue-900' onClick={async() => {
                     const q = query(dbInstance, where("address", "==", account))
                     const querySnapshot = await getDocs(q);
                     const transaction = await Moralis.executeFunction(payOptions);
@@ -297,7 +329,7 @@ export default function Home() {
                     querySnapshot.forEach((doc) => {
                     deleteDoc(doc.ref);
                     })
-                }}>Take the cash</button> : <div>Your coins aren&apos;t ready yet!</div>}
+                }}>It is ready!</button> : <><Line percent={Math.round(timeLeft)} strokeWidth="4" strokeColor="#D3D3D3" className='pt-4' /><div className='text-center text-lg'>Ahoy! Your coins are only %{Math.round(timeLeft)} of the way there!</div></> : <div></div>}
                 </div>
             </div>
         </div>
