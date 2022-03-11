@@ -12,6 +12,7 @@ import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, wher
 import {isMobile} from 'react-device-detect';
 import { Line, Circle } from 'rc-progress';
 import percentValue from 'percent-value';
+import Select from 'react-select'
 
 
 
@@ -22,9 +23,28 @@ export default function Home() {
     const [isReady, setIsReady] = useState(false)
     const [usrAdd, setUsrAdd] = useState(0)
     const [isValVisible, setValVisible] = useState(false)
+    const [option, setOption] = useState()
+    const [rate, setRate] = useState(1)
     const { authenticate, account } = useMoralis();
 
-    console.log(serverTimestamp())
+    const options = [
+      {
+        label: "7 Days at 200% APY",
+        time: 604800,
+        rate: 111
+      },
+      {
+        label: "30 Days at 1000% APY",
+        time: 2592000,
+        rate: 111
+      },
+      {
+        label: "60 Days at 2500% APY",
+        time: 5184000,
+        rate: 111
+      },
+    ]
+
     const firebaseConfig = {
         apiKey: "AIzaSyAZgon2VEA4J2GN_fP8x1NRYVU6ZiUkXV0",
         authDomain: "staking-dee0b.firebaseapp.com",
@@ -44,7 +64,9 @@ export default function Home() {
         addDoc(dbInstance, {
             address: account,
             amount: JSON.parse(stakedAmount * 10 ** 18),
-            createdAt: serverTimestamp()
+            createdAt: Math.round(Date.now() / 1000),
+            time: option.time,
+            rate: option.rate
         })
     }
 
@@ -105,7 +127,7 @@ export default function Home() {
     var stakePay = BigInt(10 * 10 ** 18)
     
     const sendOptions = {
-        contractAddress: "0xc658639FEAa313C4b6BD69C5Bf9300835E766535",
+        contractAddress: "0x3e353245cc50f27c781f4f15c46f022fb861ba5c",
         functionName: "stakeStart",
         abi: ABI,
         params: {
@@ -113,25 +135,17 @@ export default function Home() {
           stakedAmount: BigInt(stakedAmount * 10 ** 18),
         },
       };
-
+      //0xc658639FEAa313C4b6BD69C5Bf9300835E766535
     const payOptions = {
-      contractAddress: "0xc658639FEAa313C4b6BD69C5Bf9300835E766535",
+      contractAddress: "0x3e353245cc50f27c781f4f15c46f022fb861ba5c",
       functionName: "payStake",
       abi: ABI,
       params: {
         staker: account,
-        stakedAmount: BigInt(Math.round((usrAdd / 111) * 100)),
-      },
+        stakedAmount: BigInt(Math.round((usrAdd / 100) * rate)),
+      }
     };
 
-    const getBalance = {
-      contractAddress: "0xc658639FEAa313C4b6BD69C5Bf9300835E766535",
-      functionName: "balanceOf",
-      abi: ABI,
-      params: {
-        account: account,
-      },
-    }
 
 
     async function timeleft() {
@@ -140,14 +154,18 @@ export default function Home() {
 
     querySnapshot.forEach((doc) => {
       const obj = (doc.id, "=>", doc.data());
-      console.log(obj.createdAt.seconds)
-      console.log(Math.round(Math.round(Date.now() / 1000 - obj.createdAt.seconds) / 604800 * 100))
-      setTimeLeft(Math.round(Math.round(Date.now() / 1000 - obj.createdAt.seconds) / 604800 * 100))
+      console.log(obj.time)
+      console.log((Math.round(Date.now() / 1000) - obj.createdAt) / obj.time * 100)
+      setTimeLeft((Math.round(Date.now() / 1000) - obj.createdAt) / obj.time * 100)
       })
     }
 
     timeleft()
 
+    const HandelChange = (obj) => {
+      setOption(obj);
+      console.log(obj);
+    };
 
   return (
     <div className="h-full w-full flex justify-center lg:items-center">
@@ -240,10 +258,17 @@ export default function Home() {
                 </div>
                 <div className='text-xl text-center'>
                     Welcome to Trueholds staking! <br />
-                    200% APY, 7 Day Lock
+                    <Select
+                    className='text-black'
+                    onChange={(option) => HandelChange(option)}
+                    options={options}
+                    value={option}
+                  />
                 </div>
                 <div id="logging">
                 {account ? <button className="drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[200px] hover:scale-110 bg-blue-900">{account}</button> : <button onClick={async function log() {
+const q = query(dbInstance, where("address", "==", account))
+const querySnapshot = await getDocs(q);
                   console.log(bal)
                   if (isMobile) {
                   await Moralis.authenticate({ 
@@ -273,7 +298,7 @@ export default function Home() {
                         console.log(querySnapshot.docs.length)
 
                         if (querySnapshot.docs.length == 0) {
-                        if (BigInt(stakedAmount)) {
+                        if (BigInt(stakedAmount) && option != undefined) {
                                 const transaction = await Moralis.executeFunction(sendOptions);
                                 console.log(transaction.hash)
                                 await transaction.wait();
@@ -292,7 +317,9 @@ export default function Home() {
                     Here, you can check your staked coins.
                 </div>
                 <div>
-                    { isValVisible ? <div className='text-center'>You have {usrAdd / 10 ** 18} coins staked. <br /> <br /> That makes about {Math.round(((usrAdd / 100) * 111) / 10 ** 18)} after staking!</div> : <div>Seems like you haven&apos;t staked yet...</div>}
+
+                    { isValVisible ? <div className='text-center'>You have {usrAdd / 10 ** 18} coins staked. <br /> <br />
+                     That makes about {Math.round(((usrAdd / 100) * rate) / 10 ** 18)} after staking!</div> : <div>Seems like you haven&apos;t staked yet...</div>}
                 </div>
                 <div className='flex gap-4 w-full items-center flex-col'>
                     {account ? <button className='drop-shadow-md text-center p-4 rounded-md transition-all overflow-hidden text-ellipsis w-[200px] hover:scale-110 bg-blue-900' onClick={async() => {
@@ -303,19 +330,24 @@ export default function Home() {
                     const obj = (doc.id, "=>", doc.data());
                     console.log(doc.id, "=>", doc.data())
                     console.log(obj.amount);
-                    console.log(obj.createdAt.seconds)
+                    console.log(obj.createdAt)
                     console.log(Math.round((new Date()).getTime() / 1000))
+
+
+                    setRate(obj.rate)
+                    console.log(rate)
 
                     setValVisible(true)
                     setUsrAdd(obj.amount)
-                    
-                    if (Math.round((new Date()).getTime() / 1000) - obj.createdAt.seconds < 604800) {
-                        setIsReady(false)
-                    } else {
+                    console.log(100 <= ((Math.round(Date.now() / 1000) - obj.createdAt) / obj.time * 100))
+
+                    if (100 <= ((Math.round(Date.now() / 1000) - obj.createdAt) / obj.time * 100)) {
                         setIsReady(true)
+                    } else {
+                        setIsReady(false)
                     }
 
-                    console.log(obj.createdAt.seconds)
+                    console.log(obj.createdAt)
                     console.log(Math.round(Date.now() / 1000))
 
                     });
