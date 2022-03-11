@@ -127,7 +127,7 @@ export default function Home() {
     var stakePay = BigInt(10 * 10 ** 18)
     
     const sendOptions = {
-        contractAddress: "0x3e353245cc50f27c781f4f15c46f022fb861ba5c",
+        contractAddress: "0xc658639FEAa313C4b6BD69C5Bf9300835E766535",
         functionName: "stakeStart",
         abi: ABI,
         params: {
@@ -137,7 +137,7 @@ export default function Home() {
       };
       //0xc658639FEAa313C4b6BD69C5Bf9300835E766535
     const payOptions = {
-      contractAddress: "0x3e353245cc50f27c781f4f15c46f022fb861ba5c",
+      contractAddress: "0xc658639FEAa313C4b6BD69C5Bf9300835E766535",
       functionName: "payStake",
       abi: ABI,
       params: {
