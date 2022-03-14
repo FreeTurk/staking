@@ -36,12 +36,12 @@ export default function Home() {
       {
         label: "30 Days at 1000% APY",
         time: 2592000,
-        rate: 111
+        rate: 265
       },
       {
         label: "60 Days at 2500% APY",
         time: 5184000,
-        rate: 111
+        rate: 450
       },
     ]
 
@@ -259,7 +259,7 @@ export default function Home() {
                 <div className='text-xl text-center'>
                     Welcome to Trueholds staking! <br />
                     <Select
-                    className='text-black'
+                    className='text-black mt-4 bg-blue-500'
                     onChange={(option) => HandelChange(option)}
                     options={options}
                     value={option}
