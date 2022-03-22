@@ -43,6 +43,11 @@ export default function Home() {
         time: 5184000,
         rate: 450
       },
+      {
+        label: "180 Days at 100k% APY",
+        time: 15780000,
+        rate: 6127
+      },
     ]
 
     const firebaseConfig = {
