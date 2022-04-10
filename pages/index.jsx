@@ -173,7 +173,7 @@ export default function Home() {
     };
 
   return (
-    <div className="h-full w-full flex justify-center lg:items-center">
+    <div className="h-full w-full flex justify-center lg:items-center items-start">
          <Particles
       id="tsparticles"
       init={particlesInit}
@@ -256,7 +256,22 @@ export default function Home() {
         detectRetina: true,
       }}
     />
-        <div className="py-16 lg:p-0 text-white flex absolute gap-16 flex-col lg:flex-row w-3/4 lg:h-2/4 justify-center items-center transition-all">
+
+<div id="logging" className='absolute right-4 top-4 text-white'>
+                {account ? <button className="drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[200px] hover:scale-110 bg-blue-700">{account}</button> : <button onClick={async function log() {
+const q = query(dbInstance, where("address", "==", account))
+const querySnapshot = await getDocs(q);
+                  console.log(bal)
+                  if (isMobile) {
+                  await Moralis.authenticate({ 
+                    provider: "walletconnect"
+                })
+              } else {
+                await Moralis.authenticate()
+              }
+                  }} className="drop-shadow-md p-4 rounded-md transition-all hover:scale-110 bg-blue-700">Connect</button>}
+                </div>
+        <div className="py-24 lg:p-0 text-white flex absolute gap-16 flex-col lg:flex-row w-3/4 lg:h-2/4 justify-center items-center transition-all">
             <div className="items-center justify-around drop-shadow-xl bg-blue-700 w-full lg:w-1/3 lg:max-w-sm lg:h-full h-96 flex flex-col p-8 rounded-xl">
                 <div className="text-4xl font-bold">
                     Start Staking!

@@ -19,6 +19,10 @@ a {
   text-decoration: none;
 }
 
+#__next {
+  height: 100%;
+}
+
 * {
   box-sizing: border-box;
 }
