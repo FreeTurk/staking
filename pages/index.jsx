@@ -271,6 +271,9 @@ const querySnapshot = await getDocs(q);
               }
                   }} className="drop-shadow-md p-4 rounded-md transition-all hover:scale-110 bg-blue-700">Connect</button>}
                 </div>
+                <div className='absolute top-4 left-4 lg:h-32 lg:w-32 h-20 w-20'>
+                <Image src="/logo.png" layout='fill' />
+                </div>
         <div className="py-24 lg:p-0 text-white flex absolute gap-16 flex-col lg:flex-row w-3/4 lg:h-2/4 justify-center items-center transition-all">
             <div className="items-center justify-around drop-shadow-xl bg-blue-700 w-full lg:w-1/3 lg:max-w-sm lg:h-full h-96 flex flex-col p-8 rounded-xl">
                 <div className="text-4xl font-bold">
