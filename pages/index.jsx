@@ -42,12 +42,7 @@ export default function Home() {
         label: "60 Days at 2500% APY",
         time: 5184000,
         rate: 450
-      },
-      {
-        label: "180 Days at 100k% APY",
-        time: 15780000,
-        rate: 6127
-      },
+      }
     ]
 
     const firebaseConfig = {
@@ -288,20 +283,7 @@ const querySnapshot = await getDocs(q);
                     value={option}
                   />
                 </div>
-                <div id="logging">
-                {account ? <button className="drop-shadow-md p-4 rounded-md transition-all overflow-hidden text-ellipsis max-w-[200px] hover:scale-110 bg-blue-900">{account}</button> : <button onClick={async function log() {
-const q = query(dbInstance, where("address", "==", account))
-const querySnapshot = await getDocs(q);
-                  console.log(bal)
-                  if (isMobile) {
-                  await Moralis.authenticate({ 
-                    provider: "walletconnect"
-                })
-              } else {
-                await Moralis.authenticate()
-              }
-                  }} className="drop-shadow-md p-4 rounded-md transition-all hover:scale-110 bg-blue-900">Connect</button>}
-                </div>
+               
             </div>
             <div className="items-center justify-around drop-shadow-xl bg-blue-700 w-full lg:w-1/3 lg:max-w-sm lg:h-full h-96 flex flex-col p-8 rounded-xl">
                 <div className='text-xl text-center'>
